@@ -1,0 +1,179 @@
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+.kotlin
+
+### IntelliJ IDEA ###
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+# =========================
+# Java / Spring Boot
+# =========================
+target/
+build/
+out/
+
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+
+# Spring Boot
+spring.log
+
+# =========================
+# Maven
+# =========================
+.mvn/wrapper/maven-wrapper.jar
+
+# Maven Wrapper
+!/.mvn/wrapper/maven-wrapper.properties
+!mvnw
+!mvnw.cmd
+
+# =========================
+# Gradle
+# =========================
+.gradle/
+
+# =========================
+# IntelliJ IDEA
+# =========================
+.idea/
+*.iml
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Eclipse
+# =========================
+.project
+.classpath
+.settings/
+.factorypath
+
+# =========================
+# NetBeans
+# =========================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Environment Files
+# =========================
+.env
+.env.*
+application-local.yml
+application-local.properties
+application-secret.yml
+application-secret.properties
+
+# =========================
+# Database
+# =========================
+*.db
+*.sqlite
+
+# =========================
+# gRPC / Protobuf Generated
+# =========================
+generated/
+generated-sources/
+generated-test-sources/
+
+# IntelliJ protobuf plugin outputs
+.idea/modules.xml
+
+# =========================
+# Test / Coverage
+# =========================
+coverage/
+jacoco.exec
+
+# =========================
+# Docker
+# =========================
+*.tar
+
+# =========================
+# Kubernetes
+# =========================
+*.kubeconfig
+
+# =========================
+# Mac/Linux temp
+# =========================
+*~
+*.swp
+
+# =========================
+# Runtime Secrets
+# =========================
+*.pem
+*.key
+*.p12
+*.jks
+
+# =========================
+# Kafka Local Data (if any)
+# =========================
+kafka-logs/
+zookeeper-data/
+
+# =========================
+# Local configs
+# =========================
+config-local/
+secrets/
