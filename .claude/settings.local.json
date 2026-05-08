@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew test *)",
+      "Bash(chmod +x /Users/user/cashtrack/gradlew)",
+      "Bash(/Users/user/cashtrack/gradlew test *)",
+      "Bash(java *)",
+      "Bash(curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v9.2.0/gradle/wrapper/gradle-wrapper.jar)",
+      "Bash(/Users/user/cashtrack/gradlew :cashtrack-account-module:test)"
+    ]
+  }
+}
