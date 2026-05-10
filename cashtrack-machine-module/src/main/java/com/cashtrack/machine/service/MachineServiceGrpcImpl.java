@@ -6,9 +6,11 @@ import com.cashtrack.machine.repository.ATMRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.Optional;
 
 @GrpcService
+@PreAuthorize("hasAnyRole('BANK_ADMIN', 'ATM_MACHINE')")
 public class MachineServiceGrpcImpl extends MachineServiceGrpc.MachineServiceImplBase {
 
     @Autowired

@@ -6,11 +6,13 @@ import com.cashtrack.transfer.repository.TransferRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @GrpcService
+@PreAuthorize("hasRole('CUSTOMER')")
 public class TransferServiceGrpcImpl extends TransferServiceGrpc.TransferServiceImplBase {
 
     @Autowired

@@ -1,16 +1,28 @@
 plugins {
     id 'java'
-}
-
-bootJar {
-    enabled = true
+    id 'org.springframework.boot'
 }
 
 dependencies {
-    implementation project(':cashtrack-api-module')
+    implementation project(':cashtrack-common')
+    implementation project(':cashtrack-auth-module')
     implementation project(':cashtrack-account-module')
+    implementation project(':cashtrack-balance-module')
     implementation project(':cashtrack-session-module')
     implementation project(':cashtrack-withdrawl-module')
     implementation project(':cashtrack-deposit-module')
     implementation project(':cashtrack-transfer-module')
+    implementation project(':cashtrack-machine-module')
+    implementation project(':cashtrack-fraud-module')
+    implementation project(':cashtrack-notification-module')
+    implementation project(':cashtrack-analytics-module')
+    implementation project(':cashtrack-reconciliation-module')
+    implementation project(':cashtrack-forecast-module')
+    
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.mysql:mysql-connector-j'
+}
+
+bootJar {
+    enabled = true
 }

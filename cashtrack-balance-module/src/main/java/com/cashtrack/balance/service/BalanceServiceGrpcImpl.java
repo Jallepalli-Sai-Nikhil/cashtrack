@@ -5,8 +5,10 @@ import com.cashtrack.balance.repository.TransactionHistoryRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @GrpcService
+@PreAuthorize("hasRole('CUSTOMER')")
 public class BalanceServiceGrpcImpl extends BalanceServiceGrpc.BalanceServiceImplBase {
 
     @Autowired

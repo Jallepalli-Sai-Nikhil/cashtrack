@@ -6,9 +6,11 @@ import com.cashtrack.fraud.repository.FraudRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.time.LocalDateTime;
 
 @GrpcService
+@PreAuthorize("hasAnyRole('BANK_ADMIN', 'AUDITOR')")
 public class FraudServiceGrpcImpl extends FraudServiceGrpc.FraudServiceImplBase {
 
     @Autowired

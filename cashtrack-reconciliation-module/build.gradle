@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation project(':cashtrack-api-module')
+    implementation project(':cashtrack-common')
 }

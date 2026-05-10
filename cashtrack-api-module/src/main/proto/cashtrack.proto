@@ -321,10 +321,17 @@ message NotificationListResponse {
 
 // --- Module 11: Auth ---
 service AuthService {
+  rpc Register (RegisterRequest) returns (AuthResponse);
   rpc Login (LoginRequest) returns (AuthResponse);
   rpc ValidateToken (TokenRequest) returns (AuthResponse);
   rpc RefreshToken (TokenRequest) returns (AuthResponse);
   rpc Logout (TokenRequest) returns (AuthResponse);
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  repeated string roles = 3;
 }
 
 message LoginRequest {
