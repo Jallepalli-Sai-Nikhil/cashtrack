@@ -6,6 +6,7 @@ import com.cashtrack.session.repository.SessionRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @GrpcService
+@PreAuthorize("hasAnyRole('ATM_MACHINE', 'CUSTOMER')")
 public class SessionServiceGrpcImpl extends SessionServiceGrpc.SessionServiceImplBase {
 
     @Autowired

@@ -8,11 +8,13 @@ import com.cashtrack.account.repository.CardRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @GrpcService
+@PreAuthorize("hasRole('BANK_ADMIN')")
 public class AccountServiceGrpcImpl extends AccountServiceGrpc.AccountServiceImplBase {
 
     @Autowired

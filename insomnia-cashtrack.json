@@ -1,0 +1,87 @@
+{
+	"_type": "export",
+	"__export_format": 4,
+	"__export_date": "2024-05-22T12:00:00.000Z",
+	"__export_source": "insomnia.desktop.app:v2023.5.8",
+	"resources": [
+		{
+			"_id": "coll_cashtrack",
+			"_type": "request_collection",
+			"parentId": "wrk_1",
+			"modified": 1716380000000,
+			"created": 1716380000000,
+			"name": "CashTrack gRPC API",
+			"description": "Enterprise-level gRPC API for CashTrack",
+			"scope": "collection"
+		},
+		{
+			"_id": "req_register",
+			"_type": "request",
+			"parentId": "coll_cashtrack",
+			"modified": 1716380000000,
+			"created": 1716380000000,
+			"url": "grpc://localhost:9090",
+			"name": "Auth: Register",
+			"description": "",
+			"method": "GRPC",
+			"body": {
+				"text": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\",\n  \"roles\": [\"BANK_ADMIN\"]\n}"
+			},
+			"parameters": [],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1716380000000,
+			"isPrivate": false,
+			"protoFileId": "pf_1",
+			"protoMethodName": "/com.cashtrack.api.AuthService/Register"
+		},
+		{
+			"_id": "req_login",
+			"_type": "request",
+			"parentId": "coll_cashtrack",
+			"modified": 1716380000000,
+			"created": 1716380000000,
+			"url": "grpc://localhost:9090",
+			"name": "Auth: Login",
+			"description": "",
+			"method": "GRPC",
+			"body": {
+				"text": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+			},
+			"parameters": [],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1716370000000,
+			"isPrivate": false,
+			"protoFileId": "pf_1",
+			"protoMethodName": "/com.cashtrack.api.AuthService/Login"
+		},
+		{
+			"_id": "req_create_account",
+			"_type": "request",
+			"parentId": "coll_cashtrack",
+			"modified": 1716380000000,
+			"created": 1716380000000,
+			"url": "grpc://localhost:9090",
+			"name": "Account: Create Account",
+			"description": "Requires BANK_ADMIN role",
+			"method": "GRPC",
+			"body": {
+				"text": "{\n  \"customerName\": \"John Doe\",\n  \"kycDetails\": \"ID123456\",\n  \"initialDeposit\": 1000.0\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Authorization",
+					"value": "Bearer {{ _.jwt_token }}",
+					"disabled": false
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1716360000000,
+			"isPrivate": false,
+			"protoFileId": "pf_1",
+			"protoMethodName": "/com.cashtrack.api.AccountService/CreateAccount"
+		}
+	]
+}

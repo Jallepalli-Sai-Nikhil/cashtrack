@@ -1,39 +1,54 @@
 package com.cashtrack.deposit.service;
 
 import com.cashtrack.api.*;
+import com.cashtrack.account.entity.Account;
+import com.cashtrack.account.repository.AccountRepository;
 import com.cashtrack.deposit.entity.DepositTransaction;
-import com.cashtrack.deposit.entity.TransactionState;
 import com.cashtrack.deposit.repository.DepositRepository;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @GrpcService
+@PreAuthorize("hasRole('CUSTOMER')")
 public class DepositServiceGrpcImpl extends DepositServiceGrpc.DepositServiceImplBase {
 
     @Autowired
     private DepositRepository depositRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     @Override
     @Transactional
     public void initiateDeposit(DepositRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        DepositTransaction transaction = new DepositTransaction();
-        transaction.setAccountId(request.getAccountId());
-        transaction.setAtmId(request.getAtmId());
-        transaction.setAmount(request.getAmount());
+        Optional<Account> accountOpt = accountRepository.findById(request.getAccountId());
         
-        TransactionState state = new TransactionState.Initiated();
-        transaction.setStatus(state.getClass().getSimpleName());
+        if (accountOpt.isEmpty()) {
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("FAILED")
+                    .setMessage("Account not found")
+                    .build());
+            responseObserver.onCompleted();
+            return;
+        }
 
-        depositRepository.save(transaction);
+        DepositTransaction tx = new DepositTransaction();
+        tx.setAccountId(request.getAccountId());
+        tx.setAtmId(request.getAtmId());
+        tx.setAmount(request.getAmount());
+        tx.setStatus("INITIATED");
+
+        depositRepository.save(tx);
 
         responseObserver.onNext(TransactionResponse.newBuilder()
-                .setTransactionId(transaction.getTransactionId())
-                .setStatus(transaction.getStatus())
-                .setMessage("Deposit initiated successfully")
+                .setTransactionId(tx.getTransactionId())
+                .setStatus(tx.getStatus())
+                .setMessage("Deposit initiated. Please insert cash.")
                 .build());
         responseObserver.onCompleted();
     }
@@ -41,58 +56,63 @@ public class DepositServiceGrpcImpl extends DepositServiceGrpc.DepositServiceImp
     @Override
     @Transactional
     public void acceptCash(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateTransactionState(request.getTransactionId(), new TransactionState.Processing(), responseObserver);
-    }
-
-    @Override
-    @Transactional
-    public void validateDeposit(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateTransactionState(request.getTransactionId(), new TransactionState.Authorized(), responseObserver);
+        updateStatus(request.getTransactionId(), "CASH_ACCEPTED", responseObserver);
     }
 
     @Override
     @Transactional
     public void confirmDeposit(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        // Here we would typically update the account balance using the account module
-        updateTransactionState(request.getTransactionId(), new TransactionState.Completed(), responseObserver);
-    }
-
-    @Override
-    @Transactional
-    public void reconcileDeposit(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateTransactionState(request.getTransactionId(), new TransactionState.Reversed(), responseObserver);
-    }
-
-    private void updateTransactionState(String txId, TransactionState newState, StreamObserver<TransactionResponse> observer) {
-        Optional<DepositTransaction> txOpt = depositRepository.findById(txId);
+        Optional<DepositTransaction> txOpt = depositRepository.findById(request.getTransactionId());
         
         if (txOpt.isPresent()) {
             DepositTransaction tx = txOpt.get();
-            
-            // Demonstrating Pattern Matching for Switch (Java 21+)
-            String message = switch (newState) {
-                case TransactionState.Initiated() -> "Deposit has been initiated";
-                case TransactionState.Processing() -> "Cash is being counted and processed";
-                case TransactionState.Authorized() -> "Deposit has been authorized by the system";
-                case TransactionState.Completed() -> "Deposit successfully posted to account";
-                case TransactionState.Failed() -> "Deposit failed during processing";
-                case TransactionState.Reversed() -> "Deposit has been reversed and cash returned";
-            };
+            if ("COMPLETED".equals(tx.getStatus())) {
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setStatus("ALREADY_COMPLETED")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
 
-            tx.setStatus(newState.getClass().getSimpleName());
+            Optional<Account> accountOpt = accountRepository.findById(tx.getAccountId());
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
+                account.setBalance(account.getBalance() + tx.getAmount());
+                accountRepository.save(account);
+
+                tx.setStatus("COMPLETED");
+                depositRepository.save(tx);
+
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setTransactionId(tx.getTransactionId())
+                        .setStatus("SUCCESS")
+                        .setMessage("Deposit completed. Account credited.")
+                        .build());
+            } else {
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setStatus("ACCOUNT_LOST")
+                        .build());
+            }
+        } else {
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("NOT_FOUND")
+                    .build());
+        }
+        responseObserver.onCompleted();
+    }
+
+    private void updateStatus(String txId, String status, StreamObserver<TransactionResponse> observer) {
+        Optional<DepositTransaction> txOpt = depositRepository.findById(txId);
+        if (txOpt.isPresent()) {
+            DepositTransaction tx = txOpt.get();
+            tx.setStatus(status);
             depositRepository.save(tx);
-            
             observer.onNext(TransactionResponse.newBuilder()
                     .setTransactionId(tx.getTransactionId())
                     .setStatus(tx.getStatus())
-                    .setMessage(message)
                     .build());
         } else {
-            observer.onNext(TransactionResponse.newBuilder()
-                    .setTransactionId(txId)
-                    .setStatus("NOT_FOUND")
-                    .setMessage("Transaction not found")
-                    .build());
+            observer.onNext(TransactionResponse.newBuilder().setStatus("NOT_FOUND").build());
         }
         observer.onCompleted();
     }

@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
-    implementation project(':cashtrack-api-module')
+    implementation project(':cashtrack-common')
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }

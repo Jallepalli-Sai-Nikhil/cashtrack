@@ -1,0 +1,58 @@
+ Testing Roles and RBAC: Providing sample data for the registration method covering all enterprise roles.
+
+
+✦ Here is the registration data (JSON payloads) for each role in the system. You can paste these into the Auth: Register method in Insomnia.
+
+  1. Bank Administrator (Full Access)
+  This role is required for high-level operations like creating accounts, deactivating accounts, and managing ATM hardware.
+
+   1 {
+   2   "username": "admin_user",
+   3   "password": "AdminPassword123",
+   4   "roles": ["BANK_ADMIN"]
+   5 }
+
+  2. Customer (Standard User)
+  This role is for individual users to check their own balances or request statements.
+
+   1 {
+   2   "username": "john_doe",
+   3   "password": "CustomerPassword123",
+   4   "roles": ["CUSTOMER"]
+   5 }
+
+  3. ATM Machine (System Role)
+  This role should be assigned to the "identities" used by physical ATM hardware. It allows methods like DispenseCash, AcceptCash, and LoadCash.
+
+   1 {
+   2   "username": "atm_device_001",
+   3   "password": "DeviceSecretKey789",
+   4   "roles": ["ATM_MACHINE"]
+   5 }
+
+  4. Auditor (Read-Only/Compliance)
+  This role is for compliance officers who need to view Reconciliation reports, Transaction History, and Fraud alerts without having the power to move
+  money or change accounts.
+
+   1 {
+   2   "username": "compliance_officer",
+   3   "password": "AuditorPassword456",
+   4   "roles": ["AUDITOR"]
+   5 }
+
+  ---
+
+  Pro-Tip: Multi-Role User
+  If you want to create a "Super User" for your own development testing that can do everything, you can register a user with multiple roles like this:
+
+   1 {
+   2   "username": "dev_root",
+   3   "password": "RootPassword999",
+   4   "roles": ["BANK_ADMIN", "CUSTOMER", "ATM_MACHINE", "AUDITOR"]
+   5 }
+
+  Quick Verification Steps:
+   1. Register the admin_user using the JSON above.
+   2. Login as admin_user to get the JWT.
+   3. Test Account Creation: Use the token to call CreateAccount. It should succeed.
+   4. Test Role Restriction: Login as john_doe (Customer) and try to call CreateAccount. You should receive an Access Denied (Permission Denied) error

@@ -1,6 +1,7 @@
 rootProject.name = 'cashTrack'
 
 include 'cashtrack-api-module'
+include 'cashtrack-common'
 include 'cashtrack-account-module'
 include 'cashtrack-session-module'
 include 'cashtrack-withdrawl-module'
