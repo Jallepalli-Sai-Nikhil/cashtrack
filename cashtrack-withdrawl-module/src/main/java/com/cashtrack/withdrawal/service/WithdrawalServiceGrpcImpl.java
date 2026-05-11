@@ -1,6 +1,8 @@
 package com.cashtrack.withdrawal.service;
 
 import com.cashtrack.api.*;
+import com.cashtrack.account.entity.Account;
+import com.cashtrack.account.repository.AccountRepository;
 import com.cashtrack.withdrawal.entity.WithdrawalTransaction;
 import com.cashtrack.withdrawal.repository.WithdrawalRepository;
 import io.grpc.stub.StreamObserver;
@@ -18,9 +20,33 @@ public class WithdrawalServiceGrpcImpl extends WithdrawalServiceGrpc.WithdrawalS
     @Autowired
     private WithdrawalRepository withdrawalRepository;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     @Override
     @Transactional
     public void initiateWithdrawal(WithdrawalRequest request, StreamObserver<TransactionResponse> responseObserver) {
+        Optional<Account> accountOpt = accountRepository.findById(request.getAccountId());
+        
+        if (accountOpt.isEmpty()) {
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("FAILED")
+                    .setMessage("Account not found")
+                    .build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        Account account = accountOpt.get();
+        if (account.getBalance() < request.getAmount()) {
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("INSUFFICIENT_FUNDS")
+                    .setMessage("Account balance is too low")
+                    .build());
+            responseObserver.onCompleted();
+            return;
+        }
+
         WithdrawalTransaction tx = new WithdrawalTransaction();
         tx.setAccountId(request.getAccountId());
         tx.setAtmId(request.getAtmId());
@@ -32,55 +58,69 @@ public class WithdrawalServiceGrpcImpl extends WithdrawalServiceGrpc.WithdrawalS
         responseObserver.onNext(TransactionResponse.newBuilder()
                 .setTransactionId(tx.getTransactionId())
                 .setStatus(tx.getStatus())
-                .setMessage("Withdrawal initiated")
+                .setMessage("Withdrawal initiated. Please confirm.")
                 .build());
         responseObserver.onCompleted();
     }
 
     @Override
     @Transactional
-    public void validateWithdrawal(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateStatus(request.getTransactionId(), "AUTHORIZED", responseObserver);
-    }
-
-    @Override
-    @Transactional
-    public void dispenseCash(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateStatus(request.getTransactionId(), "PROCESSING", responseObserver);
-    }
-
-    @Override
-    @Transactional
     public void confirmWithdrawal(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateStatus(request.getTransactionId(), "COMPLETED", responseObserver);
+        Optional<WithdrawalTransaction> txOpt = withdrawalRepository.findById(request.getTransactionId());
+        
+        if (txOpt.isPresent()) {
+            WithdrawalTransaction tx = txOpt.get();
+            if ("COMPLETED".equals(tx.getStatus())) {
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setStatus("ALREADY_COMPLETED")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            Optional<Account> accountOpt = accountRepository.findById(tx.getAccountId());
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
+                account.setBalance(account.getBalance() - tx.getAmount());
+                accountRepository.save(account);
+
+                tx.setStatus("COMPLETED");
+                withdrawalRepository.save(tx);
+
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setTransactionId(tx.getTransactionId())
+                        .setStatus("SUCCESS")
+                        .setMessage("Cash dispensed and account debited.")
+                        .build());
+            } else {
+                responseObserver.onNext(TransactionResponse.newBuilder()
+                        .setStatus("ACCOUNT_LOST")
+                        .build());
+            }
+        } else {
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("NOT_FOUND")
+                    .build());
+        }
+        responseObserver.onCompleted();
     }
 
     @Override
     @Transactional
     public void reverseWithdrawal(TransactionIdRequest request, StreamObserver<TransactionResponse> responseObserver) {
-        updateStatus(request.getTransactionId(), "REVERSED", responseObserver);
-    }
-
-    private void updateStatus(String txId, String status, StreamObserver<TransactionResponse> observer) {
-        Optional<WithdrawalTransaction> txOpt = withdrawalRepository.findById(txId);
-        
+        Optional<WithdrawalTransaction> txOpt = withdrawalRepository.findById(request.getTransactionId());
         if (txOpt.isPresent()) {
             WithdrawalTransaction tx = txOpt.get();
-            tx.setStatus(status);
+            tx.setStatus("REVERSED");
             withdrawalRepository.save(tx);
-            
-            observer.onNext(TransactionResponse.newBuilder()
-                    .setTransactionId(tx.getTransactionId())
-                    .setStatus(tx.getStatus())
-                    .setMessage("Status updated to " + status)
+            responseObserver.onNext(TransactionResponse.newBuilder()
+                    .setStatus("REVERSED")
                     .build());
         } else {
-            observer.onNext(TransactionResponse.newBuilder()
-                    .setTransactionId(txId)
+            responseObserver.onNext(TransactionResponse.newBuilder()
                     .setStatus("NOT_FOUND")
-                    .setMessage("Transaction not found")
                     .build());
         }
-        observer.onCompleted();
+        responseObserver.onCompleted();
     }
 }
